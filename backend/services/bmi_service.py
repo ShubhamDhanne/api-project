@@ -9,6 +9,7 @@ Params:   weight_kg, height_cm
 Auth:     X-Api-Key header (shared CALORIE_NINJAS_API_KEY)
 """
 import logging
+import os
 
 import requests
 
@@ -16,6 +17,7 @@ from config import Config
 
 logger = logging.getLogger(__name__)
 
+# Built at call-time so the URL always reflects the current config
 _BMI_URL = f'{Config.CALORIE_NINJAS_BASE_URL}/bodymassindex'
 
 
@@ -30,7 +32,8 @@ def get_bmi(weight_kg: float, height_cm: float) -> dict | None:
         dict with keys: bmi (float), category (str), healthy_bmi_range (str)
         or None if the API call fails or key is not configured.
     """
-    api_key = Config.CALORIE_NINJAS_API_KEY
+    # Read key at call-time so it picks up the value loaded from .env on startup
+    api_key = os.getenv('CALORIE_NINJAS_API_KEY') or Config.CALORIE_NINJAS_API_KEY
     if not api_key:
         logger.warning('CALORIE_NINJAS_API_KEY not set — BMI lookup skipped.')
         return None

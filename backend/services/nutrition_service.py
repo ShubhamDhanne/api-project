@@ -5,6 +5,7 @@ for food items entered by the user.
 API key is read from the CALORIE_NINJAS_API_KEY environment variable.
 """
 import logging
+import os
 
 import requests
 
@@ -25,7 +26,7 @@ def get_nutrition_data(food_query: str) -> dict | None:
         dict with 'items' list (each item has name, calories, protein_g, fat_g,
         carbohydrates_total_g, etc.) or None if the call fails.
     """
-    api_key = Config.CALORIE_NINJAS_API_KEY
+    api_key = os.getenv('CALORIE_NINJAS_API_KEY') or Config.CALORIE_NINJAS_API_KEY
     if not api_key:
         logger.warning('CALORIE_NINJAS_API_KEY not set — nutrition lookup skipped.')
         return None
