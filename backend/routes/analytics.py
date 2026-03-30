@@ -13,7 +13,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, g
 
 from routes.middleware import auth_required
-from services import analytics_service, stability_service
+from services import analytics_service, stability_service, bmi_service
 
 logger = logging.getLogger(__name__)
 
@@ -102,4 +102,37 @@ def stability():
     result = stability_service.get_stability_score(g.user_id, days)
     if not result.get('success'):
         return jsonify({'success': False, 'error': result.get('error', 'Unknown error.')}), 400
+    return jsonify({'success': True, 'data': result}), 200
+
+
+@analytics_bp.route('/bmi', methods=['POST'])
+@auth_required
+def bmi():
+    """
+    Calculate BMI using the API Ninjas BMI public API.
+
+    Body (JSON): { "weight_kg": 72.5, "height_cm": 175 }
+    Returns:
+        200 with bmi value, category, and healthy_bmi_range.
+        400 on bad input, 503 if API key is missing.
+    """
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'success': False, 'error': 'JSON body required.'}), 400
+
+    try:
+        weight_kg = float(data['weight_kg'])
+        height_cm = float(data['height_cm'])
+    except (KeyError, ValueError, TypeError):
+        return jsonify({'success': False, 'error': 'weight_kg and height_cm are required numbers.'}), 400
+
+    if not (20 <= weight_kg <= 500):
+        return jsonify({'success': False, 'error': 'weight_kg must be between 20 and 500.'}), 400
+    if not (50 <= height_cm <= 300):
+        return jsonify({'success': False, 'error': 'height_cm must be between 50 and 300.'}), 400
+
+    result = bmi_service.get_bmi(weight_kg, height_cm)
+    if result is None:
+        return jsonify({'success': False, 'error': 'BMI service unavailable. Ensure CALORIE_NINJAS_API_KEY is configured.'}), 503
+
     return jsonify({'success': True, 'data': result}), 200

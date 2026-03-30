@@ -110,6 +110,7 @@ async function prefillForm(date) {
 
   setField('steps', r.steps);
   setField('weight_kg', r.weight_kg);
+  setField('height_cm', r.height_cm);
   setField('heart_rate', r.heart_rate);
   setField('calories_burned', r.calories_burned);
   setField('sleep_time', r.sleep_time);
@@ -209,6 +210,7 @@ function buildPayload(date) {
 
   if (num('steps') !== undefined)          payload.steps = num('steps');
   if (num('weight_kg') !== undefined)      payload.weight_kg = num('weight_kg');
+  if (num('height_cm') !== undefined)      payload.height_cm = num('height_cm');
   if (num('heart_rate') !== undefined)     payload.heart_rate = num('heart_rate');
   if (num('calories_burned') !== undefined) payload.calories_burned = num('calories_burned');
   if (str('sleep_time'))                   payload.sleep_time = str('sleep_time');

@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('page-loader').classList.add('d-none');
   document.getElementById('dashboard-content').classList.remove('d-none');
+
+  initBmiCalculator();
 });
 
 // ── Today's stats ─────────────────────────────────────────────────────────────
@@ -202,4 +204,60 @@ function stabilityBadgeClass(label) {
     'Critical': 'badge-critical',
   };
   return map[label] || 'bg-secondary';
+}
+
+// ── BMI Calculator ────────────────────────────────────────────────────────────
+
+function initBmiCalculator() {
+  const btn = document.getElementById('bmi-btn');
+  if (!btn) return;
+
+  btn.addEventListener('click', async () => {
+    const weight = parseFloat(document.getElementById('bmi-weight')?.value);
+    const height = parseFloat(document.getElementById('bmi-height')?.value);
+    const resultEl = document.getElementById('bmi-result');
+    const errorEl = document.getElementById('bmi-error');
+    const spinner = document.getElementById('bmi-spinner');
+    const icon = document.getElementById('bmi-icon');
+
+    errorEl.classList.add('d-none');
+    resultEl.classList.add('d-none');
+
+    if (!weight || !height || isNaN(weight) || isNaN(height)) {
+      errorEl.textContent = 'Please enter both weight (kg) and height (cm).';
+      errorEl.classList.remove('d-none');
+      return;
+    }
+
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+    icon.classList.add('d-none');
+
+    const res = await apiCall('/api/analytics/bmi', 'POST', { weight_kg: weight, height_cm: height });
+
+    btn.disabled = false;
+    spinner.classList.add('d-none');
+    icon.classList.remove('d-none');
+
+    if (!res?.success) {
+      errorEl.textContent = res?.error || 'BMI calculation failed.';
+      errorEl.classList.remove('d-none');
+      return;
+    }
+
+    const d = res.data;
+    document.getElementById('bmi-value').textContent = d.bmi ?? '—';
+    document.getElementById('bmi-category').textContent = d.category ?? '—';
+    document.getElementById('bmi-healthy-range').textContent = d.healthy_bmi_range ?? '18.5 – 24.9';
+
+    // colour-code the BMI value
+    const bmiVal = document.getElementById('bmi-value');
+    const bmi = parseFloat(d.bmi);
+    if (bmi < 18.5)       bmiVal.className = 'h3 fw-bold mb-0 text-warning';
+    else if (bmi < 25)    bmiVal.className = 'h3 fw-bold mb-0 text-success';
+    else if (bmi < 30)    bmiVal.className = 'h3 fw-bold mb-0 text-warning';
+    else                  bmiVal.className = 'h3 fw-bold mb-0 text-danger';
+
+    resultEl.classList.remove('d-none');
+  });
 }
