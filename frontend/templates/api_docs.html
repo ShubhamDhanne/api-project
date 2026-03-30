@@ -1,0 +1,1248 @@
+{% extends "base.html" %}
+{% block title %}API Documentation — HealthTrack{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Layout ────────────────────────────────────────────────────────────── */
+  .docs-sidebar {
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+  .docs-sidebar .nav-link {
+    color: #495057;
+    font-size: .875rem;
+    padding: .3rem .75rem;
+    border-left: 2px solid transparent;
+    border-radius: 0;
+  }
+  .docs-sidebar .nav-link:hover,
+  .docs-sidebar .nav-link.active {
+    color: #0d6efd;
+    border-left-color: #0d6efd;
+    background: rgba(13,110,253,.06);
+  }
+  .docs-sidebar .nav-section {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #adb5bd;
+    padding: .6rem .75rem .2rem;
+  }
+
+  /* ── Method badges ─────────────────────────────────────────────────────── */
+  .method-badge {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    padding: .2rem .55rem;
+    border-radius: .3rem;
+    font-family: monospace;
+    min-width: 56px;
+    text-align: center;
+    display: inline-block;
+  }
+  .method-get    { background:#d1e7dd; color:#0a3622; }
+  .method-post   { background:#cfe2ff; color:#052c65; }
+  .method-put    { background:#fff3cd; color:#664d03; }
+  .method-delete { background:#f8d7da; color:#58151c; }
+
+  /* ── Endpoint card ─────────────────────────────────────────────────────── */
+  .endpoint-card {
+    border: 1px solid #dee2e6;
+    border-radius: .5rem;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  .endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    background: #f8f9fa;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid transparent;
+  }
+  .endpoint-header:hover { background:#e9ecef; }
+  .endpoint-header.open  { border-bottom-color: #dee2e6; }
+  .endpoint-url {
+    font-family: monospace;
+    font-size: .9rem;
+    font-weight: 600;
+    color: #212529;
+  }
+  .endpoint-summary {
+    font-size: .8rem;
+    color: #6c757d;
+    margin-left: auto;
+  }
+  .endpoint-body { padding: 1rem; }
+
+  /* ── Code blocks ───────────────────────────────────────────────────────── */
+  pre.code-block {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-radius: .4rem;
+    padding: 1rem;
+    font-size: .8rem;
+    overflow-x: auto;
+    margin: 0;
+  }
+  pre.code-block .key    { color: #89dceb; }
+  pre.code-block .str    { color: #a6e3a1; }
+  pre.code-block .num    { color: #fab387; }
+  pre.code-block .bool   { color: #cba6f7; }
+  pre.code-block .method { color: #89b4fa; }
+  pre.code-block .url    { color: #f38ba8; }
+  pre.code-block .header { color: #f9e2af; }
+
+  /* ── Try-it panel ──────────────────────────────────────────────────────── */
+  .try-it-panel {
+    background: #f0f4ff;
+    border: 1px solid #c5d3f7;
+    border-radius: .4rem;
+    padding: 1rem;
+  }
+  .try-it-response {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-radius: .4rem;
+    padding: .75rem;
+    font-size: .8rem;
+    white-space: pre-wrap;
+    min-height: 60px;
+    max-height: 260px;
+    overflow-y: auto;
+    display: none;
+  }
+  .try-it-response.visible { display: block; }
+
+  /* ── Section anchors ───────────────────────────────────────────────────── */
+  section[id] { scroll-margin-top: 80px; }
+
+  /* ── Param table ───────────────────────────────────────────────────────── */
+  .param-table th { font-size: .78rem; font-weight: 600; background: #f8f9fa; }
+  .param-table td { font-size: .82rem; vertical-align: top; }
+  .param-name     { font-family: monospace; font-weight: 600; color: #0a3622; background: #d1e7dd; padding: .15rem .35rem; border-radius: .2rem; }
+  .param-required { color: #dc3545; font-size: .7rem; font-weight: 700; }
+  .param-optional { color: #6c757d; font-size: .7rem; }
+
+  /* ── Base URL hero ─────────────────────────────────────────────────────── */
+  .base-url-box {
+    background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+    border-radius: .5rem;
+    color: #fff;
+    padding: 1.5rem 2rem;
+  }
+  .base-url-box code {
+    background: rgba(255,255,255,.2);
+    color: #fff;
+    padding: .3rem .6rem;
+    border-radius: .3rem;
+    font-size: 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+
+  <!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
+  <div class="col-lg-2 d-none d-lg-block">
+    <nav class="docs-sidebar" id="docs-nav">
+      <div class="nav-section">Overview</div>
+      <a class="nav-link" href="#overview">Introduction</a>
+      <a class="nav-link" href="#auth-overview">Authentication</a>
+      <a class="nav-link" href="#response-format">Response Format</a>
+
+      <div class="nav-section mt-2">Auth API</div>
+      <a class="nav-link" href="#register">POST /register</a>
+      <a class="nav-link" href="#login">POST /login</a>
+
+      <div class="nav-section mt-2">Health API</div>
+      <a class="nav-link" href="#health-create">POST /health</a>
+      <a class="nav-link" href="#health-list">GET /health</a>
+      <a class="nav-link" href="#health-get">GET /health/:date</a>
+      <a class="nav-link" href="#health-update">PUT /health/:date</a>
+      <a class="nav-link" href="#health-delete">DELETE /health/:date</a>
+      <a class="nav-link" href="#nutrition-lookup">POST /nutrition-lookup</a>
+
+      <div class="nav-section mt-2">Analytics API</div>
+      <a class="nav-link" href="#analytics-daily">GET /daily</a>
+      <a class="nav-link" href="#analytics-weekly">GET /weekly</a>
+      <a class="nav-link" href="#analytics-monthly">GET /monthly</a>
+      <a class="nav-link" href="#analytics-stability">GET /stability</a>
+      <a class="nav-link" href="#analytics-bmi">POST /bmi</a>
+    </nav>
+  </div>
+
+  <!-- ── Main content ─────────────────────────────────────────────────────── -->
+  <div class="col-lg-10">
+
+    <!-- Page title -->
+    <div class="mb-4">
+      <h3 class="fw-bold mb-1"><i class="fas fa-book-open text-primary me-2"></i>API Documentation</h3>
+      <p class="text-muted mb-0">Complete reference for the HealthTrack REST API — all endpoints built and owned by this project.</p>
+    </div>
+
+    <!-- ── Overview ─────────────────────────────────────────────────────── -->
+    <section id="overview" class="mb-4">
+      <div class="base-url-box mb-3">
+        <div class="fw-semibold mb-1 opacity-75" style="font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;">Base URL</div>
+        <code id="base-url-display">http://13.60.233.151:5000</code>
+        <div class="mt-2 opacity-75" style="font-size:.85rem;">All endpoints are prefixed with this base URL. For local development use <code style="background:rgba(255,255,255,.2)">http://localhost:5000</code>.</div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+              <div class="fs-3 text-primary mb-2"><i class="fas fa-layer-group"></i></div>
+              <div class="fw-bold">13 Endpoints</div>
+              <div class="text-muted small">2 Auth · 6 Health · 5 Analytics</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+              <div class="fs-3 text-success mb-2"><i class="fas fa-shield-alt"></i></div>
+              <div class="fw-bold">JWT Authentication</div>
+              <div class="text-muted small">Bearer token, 2-hour expiry</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+              <div class="fs-3 text-warning mb-2"><i class="fas fa-database"></i></div>
+              <div class="fw-bold">DynamoDB Backed</div>
+              <div class="text-muted small">AWS eu-north-1 · On-demand</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Auth overview ────────────────────────────────────────────────── -->
+    <section id="auth-overview" class="mb-4">
+      <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fas fa-lock text-warning me-2"></i>Authentication</h5>
+      <p class="text-muted">Most endpoints require a JWT Bearer token. Include it in every request header:</p>
+      <pre class="code-block"><span class="header">Authorization: Bearer &lt;your_token&gt;</span></pre>
+      <div class="alert alert-info mt-3 mb-0 small">
+        <i class="fas fa-info-circle me-1"></i>
+        Obtain a token via <code>POST /api/auth/login</code>. Tokens expire after <strong>2 hours</strong>.
+        Endpoints marked <span class="badge bg-success">No Auth</span> are public.
+      </div>
+    </section>
+
+    <!-- ── Response format ──────────────────────────────────────────────── -->
+    <section id="response-format" class="mb-5">
+      <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fas fa-code text-secondary me-2"></i>Response Format</h5>
+      <p class="text-muted">All responses use a consistent JSON envelope:</p>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="fw-semibold small mb-1 text-success"><i class="fas fa-check-circle me-1"></i>Success</div>
+          <pre class="code-block">{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"data"</span>: { <span class="str">/* payload */</span> }
+}</pre>
+        </div>
+        <div class="col-md-6">
+          <div class="fw-semibold small mb-1 text-danger"><i class="fas fa-times-circle me-1"></i>Error</div>
+          <pre class="code-block">{
+  <span class="key">"success"</span>: <span class="bool">false</span>,
+  <span class="key">"error"</span>: <span class="str">"Human-readable message"</span>
+}</pre>
+        </div>
+      </div>
+      <table class="table table-sm mt-3 small">
+        <thead class="table-light"><tr><th>Status</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>200</code></td><td>OK — request succeeded</td></tr>
+          <tr><td><code>201</code></td><td>Created — resource created successfully</td></tr>
+          <tr><td><code>400</code></td><td>Bad Request — validation error</td></tr>
+          <tr><td><code>401</code></td><td>Unauthorized — missing or invalid token</td></tr>
+          <tr><td><code>404</code></td><td>Not Found — resource does not exist</td></tr>
+          <tr><td><code>503</code></td><td>Service Unavailable — upstream dependency error</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- AUTH API                                                            -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <h5 class="fw-bold mb-3 mt-4 pt-2 border-top">
+      <i class="fas fa-user-lock text-danger me-2"></i>Authentication API
+      <small class="text-muted fw-normal fs-6 ms-2">Base path: <code>/api/auth</code></small>
+    </h5>
+
+    <!-- POST /register -->
+    <section id="register" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-post">POST</span>
+        <span class="endpoint-url">/api/auth/register</span>
+        <span class="badge bg-success ms-2">No Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">Create a new user account</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Registers a new user. Email must be unique. Passwords are hashed (bcrypt) before storage.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2">Request Body (JSON)</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Field</th><th>Type</th><th>Req?</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">email</span></td><td>string</td><td><span class="param-required">Yes</span></td><td>Valid email address</td></tr>
+                <tr><td><span class="param-name">password</span></td><td>string</td><td><span class="param-required">Yes</span></td><td>Min 8 characters</td></tr>
+                <tr><td><span class="param-name">name</span></td><td>string</td><td><span class="param-required">Yes</span></td><td>Display name</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2">Example Request</div>
+            <pre class="code-block"><span class="method">POST</span> <span class="url">/api/auth/register</span>
+<span class="header">Content-Type: application/json</span>
+
+{
+  <span class="key">"email"</span>:    <span class="str">"alice@example.com"</span>,
+  <span class="key">"password"</span>: <span class="str">"mypassword123"</span>,
+  <span class="key">"name"</span>:     <span class="str">"Alice Smith"</span>
+}</pre>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2 text-success">201 Created</div>
+            <pre class="code-block">{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"message"</span>: <span class="str">"Account created successfully."</span>
+  }
+}</pre>
+          </div>
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2 text-danger">400 Error</div>
+            <pre class="code-block">{
+  <span class="key">"success"</span>: <span class="bool">false</span>,
+  <span class="key">"error"</span>: <span class="str">"Email already registered."</span>
+}</pre>
+          </div>
+        </div>
+
+        <!-- Try it -->
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-4"><input type="email" class="form-control form-control-sm" id="reg-email" placeholder="email@example.com" /></div>
+            <div class="col-md-4"><input type="password" class="form-control form-control-sm" id="reg-password" placeholder="password (min 8)" /></div>
+            <div class="col-md-4"><input type="text" class="form-control form-control-sm" id="reg-name" placeholder="Your Name" /></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="tryRegister()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <pre class="try-it-response mt-2" id="try-register-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- POST /login -->
+    <section id="login" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-post">POST</span>
+        <span class="endpoint-url">/api/auth/login</span>
+        <span class="badge bg-success ms-2">No Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">Authenticate and receive JWT token</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Validates credentials and returns a JWT token valid for 2 hours. Store the token in <code>localStorage</code> and pass it as <code>Authorization: Bearer &lt;token&gt;</code> on all protected requests.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2">Request Body (JSON)</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Field</th><th>Type</th><th>Req?</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">email</span></td><td>string</td><td><span class="param-required">Yes</span></td><td>Registered email address</td></tr>
+                <tr><td><span class="param-name">password</span></td><td>string</td><td><span class="param-required">Yes</span></td><td>Account password</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2">Example Request</div>
+            <pre class="code-block"><span class="method">POST</span> <span class="url">/api/auth/login</span>
+<span class="header">Content-Type: application/json</span>
+
+{
+  <span class="key">"email"</span>:    <span class="str">"alice@example.com"</span>,
+  <span class="key">"password"</span>: <span class="str">"mypassword123"</span>
+}</pre>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2 text-success">200 OK</div>
+            <pre class="code-block">{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"token"</span>: <span class="str">"eyJhbGciOiJIUzI1NiIs..."</span>,
+    <span class="key">"name"</span>:  <span class="str">"Alice Smith"</span>,
+    <span class="key">"email"</span>: <span class="str">"alice@example.com"</span>
+  }
+}</pre>
+          </div>
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2 text-danger">401 Unauthorized</div>
+            <pre class="code-block">{
+  <span class="key">"success"</span>: <span class="bool">false</span>,
+  <span class="key">"error"</span>: <span class="str">"Invalid email or password."</span>
+}</pre>
+          </div>
+        </div>
+
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-5"><input type="email" class="form-control form-control-sm" id="login-email" placeholder="email@example.com" /></div>
+            <div class="col-md-5"><input type="password" class="form-control form-control-sm" id="login-password" placeholder="password" /></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="tryLogin()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <div class="text-muted small mt-1" id="login-token-info"></div>
+          <pre class="try-it-response mt-2" id="try-login-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- HEALTH API                                                          -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <h5 class="fw-bold mb-3 mt-4 pt-2 border-top">
+      <i class="fas fa-heartbeat text-danger me-2"></i>Health Records API
+      <small class="text-muted fw-normal fs-6 ms-2">Base path: <code>/api/health</code> &mdash; <span class="badge bg-warning text-dark">Auth Required</span></small>
+    </h5>
+
+    <!-- POST /health -->
+    <section id="health-create" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-post">POST</span>
+        <span class="endpoint-url">/api/health</span>
+        <span class="badge bg-warning text-dark ms-2">Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">Create a health record</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Creates a new health record for the authenticated user for a given date. Each user may have at most one record per date. The record is written to DynamoDB (partition key: <code>user_id</code>, sort key: <code>date</code>).</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2">Request Body (JSON)</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Field</th><th>Type</th><th>Req?</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">date</span></td><td>string</td><td><span class="param-required">Yes</span></td><td>YYYY-MM-DD format</td></tr>
+                <tr><td><span class="param-name">steps</span></td><td>integer</td><td><span class="param-optional">No</span></td><td>Steps walked that day</td></tr>
+                <tr><td><span class="param-name">heart_rate</span></td><td>integer</td><td><span class="param-optional">No</span></td><td>Resting heart rate (bpm)</td></tr>
+                <tr><td><span class="param-name">sleep_hours</span></td><td>float</td><td><span class="param-optional">No</span></td><td>Total hours of sleep</td></tr>
+                <tr><td><span class="param-name">sleep_time</span></td><td>string</td><td><span class="param-optional">No</span></td><td>Bedtime — 24hr HH:MM</td></tr>
+                <tr><td><span class="param-name">wake_time</span></td><td>string</td><td><span class="param-optional">No</span></td><td>Wake time — 24hr HH:MM</td></tr>
+                <tr><td><span class="param-name">meals</span></td><td>array</td><td><span class="param-optional">No</span></td><td>List of meal description strings</td></tr>
+                <tr><td><span class="param-name">exercise</span></td><td>object</td><td><span class="param-optional">No</span></td><td><code>{"type","duration_minutes","frequency_per_week"}</code></td></tr>
+                <tr><td><span class="param-name">weight_kg</span></td><td>float</td><td><span class="param-optional">No</span></td><td>Body weight in kilograms</td></tr>
+                <tr><td><span class="param-name">height_cm</span></td><td>float</td><td><span class="param-optional">No</span></td><td>Height in centimetres</td></tr>
+                <tr><td><span class="param-name">calories_burned</span></td><td>integer</td><td><span class="param-optional">No</span></td><td>Total calories burned</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2">Example Request</div>
+            <pre class="code-block"><span class="method">POST</span> <span class="url">/api/health</span>
+<span class="header">Authorization: Bearer &lt;token&gt;</span>
+<span class="header">Content-Type:  application/json</span>
+
+{
+  <span class="key">"date"</span>:          <span class="str">"2026-03-31"</span>,
+  <span class="key">"steps"</span>:         <span class="num">9200</span>,
+  <span class="key">"heart_rate"</span>:    <span class="num">68</span>,
+  <span class="key">"sleep_hours"</span>:   <span class="num">7.5</span>,
+  <span class="key">"sleep_time"</span>:    <span class="str">"23:00"</span>,
+  <span class="key">"wake_time"</span>:     <span class="str">"06:30"</span>,
+  <span class="key">"meals"</span>:         [<span class="str">"oats"</span>, <span class="str">"grilled chicken"</span>],
+  <span class="key">"exercise"</span>:      {
+    <span class="key">"type"</span>:              <span class="str">"running"</span>,
+    <span class="key">"duration_minutes"</span>:  <span class="num">30</span>,
+    <span class="key">"frequency_per_week"</span>:<span class="num">4</span>
+  },
+  <span class="key">"weight_kg"</span>:     <span class="num">72.5</span>,
+  <span class="key">"height_cm"</span>:     <span class="num">175</span>,
+  <span class="key">"calories_burned"</span>: <span class="num">450</span>
+}</pre>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2 text-success">201 Created</div>
+            <pre class="code-block">{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"user_id"</span>: <span class="str">"alice@example.com"</span>,
+    <span class="key">"date"</span>:    <span class="str">"2026-03-31"</span>,
+    <span class="key">"steps"</span>:   <span class="num">9200</span>,
+    <span class="key">"..."</span>: <span class="str">"(all submitted fields)"</span>
+  }
+}</pre>
+          </div>
+          <div class="col-md-6">
+            <div class="fw-semibold small mb-2 text-danger">400 Duplicate</div>
+            <pre class="code-block">{
+  <span class="key">"success"</span>: <span class="bool">false</span>,
+  <span class="key">"error"</span>: <span class="str">"Record for 2026-03-31 already exists."</span>
+}</pre>
+          </div>
+        </div>
+
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out <span class="text-muted fw-normal">(uses token from Login above)</span></div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-3"><input type="date" class="form-control form-control-sm" id="hc-date" /></div>
+            <div class="col-md-3"><input type="number" class="form-control form-control-sm" id="hc-steps" placeholder="steps e.g. 8000" /></div>
+            <div class="col-md-3"><input type="number" class="form-control form-control-sm" id="hc-hr" placeholder="heart rate bpm" /></div>
+            <div class="col-md-3"><input type="number" class="form-control form-control-sm" id="hc-sleep" step="0.1" placeholder="sleep hours" /></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="tryCreateHealth()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <pre class="try-it-response mt-2" id="try-hc-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- GET /health -->
+    <section id="health-list" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-get">GET</span>
+        <span class="endpoint-url">/api/health</span>
+        <span class="badge bg-warning text-dark ms-2">Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">List health records (optionally filtered by date range)</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Returns all health records for the authenticated user. Optionally filter by date range. Records are returned in ascending date order.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-5">
+            <div class="fw-semibold small mb-2">Query Parameters</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Param</th><th>Type</th><th>Req?</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">start_date</span></td><td>string</td><td><span class="param-optional">No</span></td><td>Filter from date (YYYY-MM-DD)</td></tr>
+                <tr><td><span class="param-name">end_date</span></td><td>string</td><td><span class="param-optional">No</span></td><td>Filter to date (YYYY-MM-DD)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-7">
+            <div class="fw-semibold small mb-2">Example Request</div>
+            <pre class="code-block"><span class="method">GET</span> <span class="url">/api/health?start_date=2026-03-01&end_date=2026-03-31</span>
+<span class="header">Authorization: Bearer &lt;token&gt;</span></pre>
+            <div class="fw-semibold small mb-2 mt-3 text-success">200 OK</div>
+            <pre class="code-block">{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"data"</span>: [
+    { <span class="key">"date"</span>: <span class="str">"2026-03-30"</span>, <span class="key">"steps"</span>: <span class="num">8500</span>, <span class="str">"..."</span> },
+    { <span class="key">"date"</span>: <span class="str">"2026-03-31"</span>, <span class="key">"steps"</span>: <span class="num">9200</span>, <span class="str">"..."</span> }
+  ]
+}</pre>
+          </div>
+        </div>
+
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-4"><input type="date" class="form-control form-control-sm" id="hl-start" /><div class="form-text">start_date (optional)</div></div>
+            <div class="col-md-4"><input type="date" class="form-control form-control-sm" id="hl-end" /><div class="form-text">end_date (optional)</div></div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="tryListHealth()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <pre class="try-it-response mt-2" id="try-hl-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- GET /health/:date -->
+    <section id="health-get" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-get">GET</span>
+        <span class="endpoint-url">/api/health/:date</span>
+        <span class="badge bg-warning text-dark ms-2">Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">Get a single record by date</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Fetch a single health record by its date. Returns 404 if no record exists for that date.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-5">
+            <div class="fw-semibold small mb-2">Path Parameter</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">date</span></td><td>string</td><td>YYYY-MM-DD — the record date</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-7">
+            <div class="fw-semibold small mb-2">Example Request</div>
+            <pre class="code-block"><span class="method">GET</span> <span class="url">/api/health/2026-03-31</span>
+<span class="header">Authorization: Bearer &lt;token&gt;</span></pre>
+          </div>
+        </div>
+
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-4"><input type="date" class="form-control form-control-sm" id="hg-date" /></div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="tryGetHealth()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <pre class="try-it-response mt-2" id="try-hg-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- PUT /health/:date -->
+    <section id="health-update" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-put">PUT</span>
+        <span class="endpoint-url">/api/health/:date</span>
+        <span class="badge bg-warning text-dark ms-2">Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">Update an existing health record</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Updates one or more fields of an existing health record. Only the fields present in the request body are updated — all others remain unchanged. The <code>user_id</code> and <code>date</code> fields are ignored even if supplied.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-5">
+            <div class="fw-semibold small mb-2">Path Parameter</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">date</span></td><td>string</td><td>YYYY-MM-DD — the record to update</td></tr>
+              </tbody>
+            </table>
+            <div class="fw-semibold small mb-2 mt-3">Request Body</div>
+            <p class="text-muted small">Any subset of health record fields (same fields as POST). Omitted fields are not touched.</p>
+          </div>
+          <div class="col-md-7">
+            <div class="fw-semibold small mb-2">Example Request</div>
+            <pre class="code-block"><span class="method">PUT</span> <span class="url">/api/health/2026-03-31</span>
+<span class="header">Authorization: Bearer &lt;token&gt;</span>
+<span class="header">Content-Type:  application/json</span>
+
+{
+  <span class="key">"steps"</span>:      <span class="num">10500</span>,
+  <span class="key">"heart_rate"</span>: <span class="num">65</span>
+}</pre>
+          </div>
+        </div>
+
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-3"><input type="date" class="form-control form-control-sm" id="hu-date" /></div>
+            <div class="col-md-3"><input type="number" class="form-control form-control-sm" id="hu-steps" placeholder="steps (optional)" /></div>
+            <div class="col-md-3"><input type="number" class="form-control form-control-sm" id="hu-hr" placeholder="heart rate (optional)" /></div>
+            <div class="col-md-3"><input type="number" class="form-control form-control-sm" id="hu-sleep" step="0.1" placeholder="sleep hrs (optional)" /></div>
+          </div>
+          <button class="btn btn-warning btn-sm" onclick="tryUpdateHealth()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <pre class="try-it-response mt-2" id="try-hu-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- DELETE /health/:date -->
+    <section id="health-delete" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-delete">DELETE</span>
+        <span class="endpoint-url">/api/health/:date</span>
+        <span class="badge bg-warning text-dark ms-2">Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">Delete a health record</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Permanently deletes the health record for the given date. Returns 404 if no record exists. This action is irreversible.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-5">
+            <div class="fw-semibold small mb-2">Path Parameter</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">date</span></td><td>string</td><td>YYYY-MM-DD — the record to delete</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-7">
+            <div class="fw-semibold small mb-2">Example Request &amp; Response</div>
+            <pre class="code-block"><span class="method">DELETE</span> <span class="url">/api/health/2026-03-31</span>
+<span class="header">Authorization: Bearer &lt;token&gt;</span>
+
+<span class="str">// 200 OK</span>
+{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"message"</span>: <span class="str">"Record for 2026-03-31 deleted."</span>
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-4"><input type="date" class="form-control form-control-sm" id="hd-date" /></div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="tryDeleteHealth()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <pre class="try-it-response mt-2" id="try-hd-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- POST /health/nutrition-lookup -->
+    <section id="nutrition-lookup" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-post">POST</span>
+        <span class="endpoint-url">/api/health/nutrition-lookup</span>
+        <span class="badge bg-warning text-dark ms-2">Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">Look up nutrition data for a food description</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Accepts a natural-language food description and returns estimated nutrition data (fat, carbohydrates, fibre, sugar, sodium) sourced from API Ninjas' nutrition database. Results are aggregated across all foods in the query.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-5">
+            <div class="fw-semibold small mb-2">Request Body (JSON)</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Field</th><th>Type</th><th>Req?</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">query</span></td><td>string</td><td><span class="param-required">Yes</span></td><td>Natural language food description, e.g. <em>"2 boiled eggs and toast"</em></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-7">
+            <div class="fw-semibold small mb-2">Example Request &amp; Response</div>
+            <pre class="code-block"><span class="method">POST</span> <span class="url">/api/health/nutrition-lookup</span>
+<span class="header">Authorization: Bearer &lt;token&gt;</span>
+<span class="header">Content-Type:  application/json</span>
+
+{ <span class="key">"query"</span>: <span class="str">"2 boiled eggs and toast"</span> }
+
+<span class="str">// 200 OK</span>
+{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"fat_total_g"</span>:    <span class="num">11.2</span>,
+    <span class="key">"carbohydrates_g"</span>: <span class="num">26.4</span>,
+    <span class="key">"fiber_g"</span>:         <span class="num">1.8</span>,
+    <span class="key">"sugar_g"</span>:         <span class="num">3.1</span>,
+    <span class="key">"sodium_mg"</span>:       <span class="num">410</span>
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-8"><input type="text" class="form-control form-control-sm" id="nu-query" placeholder="e.g. grilled chicken sandwich and orange juice" /></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="tryNutrition()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <pre class="try-it-response mt-2" id="try-nu-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- ANALYTICS API                                                       -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <h5 class="fw-bold mb-3 mt-4 pt-2 border-top">
+      <i class="fas fa-chart-line text-primary me-2"></i>Analytics API
+      <small class="text-muted fw-normal fs-6 ms-2">Base path: <code>/api/analytics</code> &mdash; <span class="badge bg-warning text-dark">Auth Required</span></small>
+    </h5>
+
+    <!-- GET /analytics/daily -->
+    <section id="analytics-daily" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-get">GET</span>
+        <span class="endpoint-url">/api/analytics/daily</span>
+        <span class="badge bg-warning text-dark ms-2">Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">Daily health analytics for a specific date</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Returns computed analytics for a single day including step goal progress, sleep quality rating, and heart rate zone classification.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-5">
+            <div class="fw-semibold small mb-2">Query Parameters</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Param</th><th>Type</th><th>Req?</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">date</span></td><td>string</td><td><span class="param-optional">No</span></td><td>YYYY-MM-DD (defaults to today UTC)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-7">
+            <div class="fw-semibold small mb-2">Example Request</div>
+            <pre class="code-block"><span class="method">GET</span> <span class="url">/api/analytics/daily?date=2026-03-31</span>
+<span class="header">Authorization: Bearer &lt;token&gt;</span></pre>
+          </div>
+        </div>
+
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-4"><input type="date" class="form-control form-control-sm" id="ad-date" /></div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="tryDailyAnalytics()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <pre class="try-it-response mt-2" id="try-ad-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- GET /analytics/weekly -->
+    <section id="analytics-weekly" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-get">GET</span>
+        <span class="endpoint-url">/api/analytics/weekly</span>
+        <span class="badge bg-warning text-dark ms-2">Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">7-day rolling weekly summary</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Aggregates health data over a 7-day window starting from <code>start_date</code>. Returns averages, totals, and trend indicators for steps, sleep, heart rate, and calories.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-5">
+            <div class="fw-semibold small mb-2">Query Parameters</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Param</th><th>Type</th><th>Req?</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">start_date</span></td><td>string</td><td><span class="param-optional">No</span></td><td>YYYY-MM-DD (defaults to 7 days ago)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-7">
+            <div class="fw-semibold small mb-2">Example Request</div>
+            <pre class="code-block"><span class="method">GET</span> <span class="url">/api/analytics/weekly?start_date=2026-03-25</span>
+<span class="header">Authorization: Bearer &lt;token&gt;</span></pre>
+          </div>
+        </div>
+
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-4"><input type="date" class="form-control form-control-sm" id="aw-start" /><div class="form-text">start_date (optional)</div></div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="tryWeeklyAnalytics()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <pre class="try-it-response mt-2" id="try-aw-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- GET /analytics/monthly -->
+    <section id="analytics-monthly" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-get">GET</span>
+        <span class="endpoint-url">/api/analytics/monthly</span>
+        <span class="badge bg-warning text-dark ms-2">Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">Monthly health summary by year and month</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Returns a monthly aggregate including total steps, average sleep, average heart rate, active days count, and best/worst day comparisons.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-5">
+            <div class="fw-semibold small mb-2">Query Parameters</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Param</th><th>Type</th><th>Req?</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">year</span></td><td>integer</td><td><span class="param-optional">No</span></td><td>4-digit year (defaults to current)</td></tr>
+                <tr><td><span class="param-name">month</span></td><td>integer</td><td><span class="param-optional">No</span></td><td>1–12 (defaults to current month)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-7">
+            <div class="fw-semibold small mb-2">Example Request</div>
+            <pre class="code-block"><span class="method">GET</span> <span class="url">/api/analytics/monthly?year=2026&month=3</span>
+<span class="header">Authorization: Bearer &lt;token&gt;</span></pre>
+          </div>
+        </div>
+
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-3"><input type="number" class="form-control form-control-sm" id="am-year" placeholder="year e.g. 2026" min="2020" max="2099" /></div>
+            <div class="col-md-3">
+              <select class="form-select form-select-sm" id="am-month">
+                <option value="">month (optional)</option>
+                <option>1</option><option>2</option><option>3</option><option>4</option>
+                <option>5</option><option>6</option><option>7</option><option>8</option>
+                <option>9</option><option>10</option><option>11</option><option>12</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="tryMonthlyAnalytics()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <pre class="try-it-response mt-2" id="try-am-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- GET /analytics/stability -->
+    <section id="analytics-stability" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-get">GET</span>
+        <span class="endpoint-url">/api/analytics/stability</span>
+        <span class="badge bg-warning text-dark ms-2">Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">Routine Stability Index from recent records</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Computes a Routine Stability Index (0–100) by analysing the consistency of sleep times, wake times, meal patterns, and exercise frequency from the user's recent health records.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-5">
+            <div class="fw-semibold small mb-2">Query Parameters</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Param</th><th>Type</th><th>Req?</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">days</span></td><td>integer</td><td><span class="param-optional">No</span></td><td>Look-back window in days (default 7, max 30)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-7">
+            <div class="fw-semibold small mb-2">Example Response (200 OK)</div>
+            <pre class="code-block">{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"overall_score"</span>: <span class="num">78</span>,
+    <span class="key">"label"</span>: <span class="str">"Good"</span>,
+    <span class="key">"breakdown"</span>: {
+      <span class="key">"sleep_consistency"</span>: <span class="num">82</span>,
+      <span class="key">"meal_regularity"</span>:  <span class="num">74</span>,
+      <span class="key">"exercise_adherence"</span>: <span class="num">77</span>
+    },
+    <span class="key">"recommendations"</span>: [<span class="str">"Try to sleep before 23:00"</span>]
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-3"><input type="number" class="form-control form-control-sm" id="as-days" placeholder="days (default 7)" min="1" max="30" /></div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="tryStability()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <pre class="try-it-response mt-2" id="try-as-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- POST /analytics/bmi -->
+    <section id="analytics-bmi" class="endpoint-card">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-post">POST</span>
+        <span class="endpoint-url">/api/analytics/bmi</span>
+        <span class="badge bg-warning text-dark ms-2">Auth</span>
+        <span class="endpoint-summary d-none d-md-inline">Calculate BMI and optional exercise calories</span>
+        <i class="fas fa-chevron-down ms-auto text-muted small"></i>
+      </div>
+      <div class="endpoint-body" style="display:none">
+        <p class="text-muted small mb-3">Calculates Body Mass Index using the WHO formula (<code>weight / height²</code>) and returns the WHO category. Optionally fetches estimated calories burned for a given activity from the API Ninjas caloriesburned endpoint.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-5">
+            <div class="fw-semibold small mb-2">Request Body (JSON)</div>
+            <table class="table table-sm param-table">
+              <thead><tr><th>Field</th><th>Type</th><th>Req?</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param-name">weight_kg</span></td><td>float</td><td><span class="param-required">Yes</span></td><td>User weight in kg (20–500)</td></tr>
+                <tr><td><span class="param-name">height_cm</span></td><td>float</td><td><span class="param-required">Yes</span></td><td>User height in cm (50–300)</td></tr>
+                <tr><td><span class="param-name">activity</span></td><td>string</td><td><span class="param-optional">No</span></td><td>Activity name, e.g. <em>"running"</em></td></tr>
+                <tr><td><span class="param-name">duration_minutes</span></td><td>integer</td><td><span class="param-optional">No</span></td><td>Exercise duration in minutes (default 30)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-7">
+            <div class="fw-semibold small mb-2">Example Request &amp; Response</div>
+            <pre class="code-block"><span class="method">POST</span> <span class="url">/api/analytics/bmi</span>
+<span class="header">Authorization: Bearer &lt;token&gt;</span>
+<span class="header">Content-Type:  application/json</span>
+
+{
+  <span class="key">"weight_kg"</span>:        <span class="num">72.5</span>,
+  <span class="key">"height_cm"</span>:        <span class="num">175</span>,
+  <span class="key">"activity"</span>:         <span class="str">"running"</span>,
+  <span class="key">"duration_minutes"</span>: <span class="num">30</span>
+}
+
+<span class="str">// 200 OK</span>
+{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"bmi"</span>:              <span class="num">23.7</span>,
+    <span class="key">"category"</span>:        <span class="str">"Normal weight"</span>,
+    <span class="key">"healthy_bmi_range"</span>: <span class="str">"18.5 - 24.9"</span>,
+    <span class="key">"weight_kg"</span>:       <span class="num">72.5</span>,
+    <span class="key">"height_cm"</span>:       <span class="num">175</span>,
+    <span class="key">"calories_burned"</span>: [
+      {
+        <span class="key">"name"</span>:             <span class="str">"Running, 5 mph"</span>,
+        <span class="key">"calories_per_hour"</span>: <span class="num">262</span>,
+        <span class="key">"duration_minutes"</span>:  <span class="num">30</span>,
+        <span class="key">"total_calories"</span>:    <span class="num">131</span>
+      }
+    ]
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="try-it-panel">
+          <div class="fw-semibold small mb-2"><i class="fas fa-flask text-primary me-1"></i>Try it out</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-3"><input type="number" class="form-control form-control-sm" id="ab-weight" step="0.1" placeholder="weight kg" /></div>
+            <div class="col-md-3"><input type="number" class="form-control form-control-sm" id="ab-height" step="0.1" placeholder="height cm" /></div>
+            <div class="col-md-3"><input type="text" class="form-control form-control-sm" id="ab-activity" placeholder="activity (optional)" /></div>
+            <div class="col-md-3"><input type="number" class="form-control form-control-sm" id="ab-duration" placeholder="duration min" value="30" /></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="tryBmi()">
+            <i class="fas fa-paper-plane me-1"></i>Send Request
+          </button>
+          <pre class="try-it-response mt-2" id="try-ab-res"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Footer note ───────────────────────────────────────────────────── -->
+    <div class="alert alert-secondary mt-4 small">
+      <i class="fas fa-info-circle me-1"></i>
+      <strong>Live base URL:</strong> <code>http://13.60.233.151:5000</code> &mdash; AWS EC2 t3.micro, eu-north-1.
+      All data is stored in DynamoDB tables <code>HealthUsers</code> and <code>HealthRecords</code>.
+    </div>
+
+  </div><!-- /col -->
+</div><!-- /row -->
+
+<script>
+/* ── Helpers ─────────────────────────────────────────────────────────────── */
+const BASE = '';   // same-origin; empty string = relative to current host
+
+function getToken() {
+  return localStorage.getItem('token') || '';
+}
+
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
+}
+
+function showResult(elId, data) {
+  const el = document.getElementById(elId);
+  el.textContent = JSON.stringify(data, null, 2);
+  el.classList.add('visible');
+}
+
+async function doFetch(method, path, body) {
+  const opts = { method, headers: authHeaders() };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const res = await fetch(BASE + path, opts);
+    return await res.json();
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+/* ── Accordion toggle ───────────────────────────────────────────────────── */
+function toggleEndpoint(header) {
+  const body = header.nextElementSibling;
+  const icon = header.querySelector('.fa-chevron-down, .fa-chevron-up');
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+    header.classList.add('open');
+    icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+  } else {
+    body.style.display = 'none';
+    header.classList.remove('open');
+    icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+  }
+}
+
+/* ── Sidebar active link on scroll ─────────────────────────────────────── */
+window.addEventListener('scroll', () => {
+  const sections = document.querySelectorAll('section[id]');
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 100) current = s.id;
+  });
+  document.querySelectorAll('#docs-nav .nav-link').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+
+/* ── Auth ────────────────────────────────────────────────────────────────── */
+async function tryRegister() {
+  const res = await doFetch('POST', '/api/auth/register', {
+    email: document.getElementById('reg-email').value,
+    password: document.getElementById('reg-password').value,
+    name: document.getElementById('reg-name').value,
+  });
+  showResult('try-register-res', res);
+}
+
+async function tryLogin() {
+  const res = await doFetch('POST', '/api/auth/login', {
+    email: document.getElementById('login-email').value,
+    password: document.getElementById('login-password').value,
+  });
+  showResult('try-login-res', res);
+  if (res?.success && res?.data?.token) {
+    localStorage.setItem('token', res.data.token);
+    document.getElementById('login-token-info').textContent =
+      '✓ Token saved to localStorage — all Try-it buttons below will use it.';
+  }
+}
+
+/* ── Health ──────────────────────────────────────────────────────────────── */
+async function tryCreateHealth() {
+  const body = { date: document.getElementById('hc-date').value };
+  const steps = document.getElementById('hc-steps').value;
+  const hr    = document.getElementById('hc-hr').value;
+  const sleep = document.getElementById('hc-sleep').value;
+  if (steps) body.steps = parseInt(steps);
+  if (hr)    body.heart_rate = parseInt(hr);
+  if (sleep) body.sleep_hours = parseFloat(sleep);
+  showResult('try-hc-res', await doFetch('POST', '/api/health', body));
+}
+
+async function tryListHealth() {
+  let qs = '';
+  const s = document.getElementById('hl-start').value;
+  const e = document.getElementById('hl-end').value;
+  if (s) qs += '?start_date=' + s;
+  if (e) qs += (qs ? '&' : '?') + 'end_date=' + e;
+  showResult('try-hl-res', await doFetch('GET', '/api/health' + qs));
+}
+
+async function tryGetHealth() {
+  const date = document.getElementById('hg-date').value;
+  if (!date) return showResult('try-hg-res', { error: 'Pick a date first.' });
+  showResult('try-hg-res', await doFetch('GET', '/api/health/' + date));
+}
+
+async function tryUpdateHealth() {
+  const date  = document.getElementById('hu-date').value;
+  if (!date) return showResult('try-hu-res', { error: 'Pick a date first.' });
+  const body = {};
+  const steps = document.getElementById('hu-steps').value;
+  const hr    = document.getElementById('hu-hr').value;
+  const sleep = document.getElementById('hu-sleep').value;
+  if (steps) body.steps = parseInt(steps);
+  if (hr)    body.heart_rate = parseInt(hr);
+  if (sleep) body.sleep_hours = parseFloat(sleep);
+  showResult('try-hu-res', await doFetch('PUT', '/api/health/' + date, body));
+}
+
+async function tryDeleteHealth() {
+  const date = document.getElementById('hd-date').value;
+  if (!date) return showResult('try-hd-res', { error: 'Pick a date first.' });
+  showResult('try-hd-res', await doFetch('DELETE', '/api/health/' + date));
+}
+
+async function tryNutrition() {
+  const q = document.getElementById('nu-query').value;
+  if (!q) return showResult('try-nu-res', { error: 'Enter a food description first.' });
+  showResult('try-nu-res', await doFetch('POST', '/api/health/nutrition-lookup', { query: q }));
+}
+
+/* ── Analytics ───────────────────────────────────────────────────────────── */
+async function tryDailyAnalytics() {
+  const date = document.getElementById('ad-date').value;
+  const qs = date ? '?date=' + date : '';
+  showResult('try-ad-res', await doFetch('GET', '/api/analytics/daily' + qs));
+}
+
+async function tryWeeklyAnalytics() {
+  const s = document.getElementById('aw-start').value;
+  const qs = s ? '?start_date=' + s : '';
+  showResult('try-aw-res', await doFetch('GET', '/api/analytics/weekly' + qs));
+}
+
+async function tryMonthlyAnalytics() {
+  const y = document.getElementById('am-year').value;
+  const m = document.getElementById('am-month').value;
+  let qs = '';
+  if (y) qs += '?year=' + y;
+  if (m) qs += (qs ? '&' : '?') + 'month=' + m;
+  showResult('try-am-res', await doFetch('GET', '/api/analytics/monthly' + qs));
+}
+
+async function tryStability() {
+  const days = document.getElementById('as-days').value;
+  const qs = days ? '?days=' + days : '';
+  showResult('try-as-res', await doFetch('GET', '/api/analytics/stability' + qs));
+}
+
+async function tryBmi() {
+  const w = parseFloat(document.getElementById('ab-weight').value);
+  const h = parseFloat(document.getElementById('ab-height').value);
+  if (!w || !h) return showResult('try-ab-res', { error: 'weight_kg and height_cm are required.' });
+  const body = { weight_kg: w, height_cm: h };
+  const act  = document.getElementById('ab-activity').value.trim();
+  const dur  = parseInt(document.getElementById('ab-duration').value) || 30;
+  if (act) { body.activity = act; body.duration_minutes = dur; }
+  showResult('try-ab-res', await doFetch('POST', '/api/analytics/bmi', body));
+}
+
+/* ── Set today's date as default in date pickers ─────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().slice(0, 10);
+  ['hc-date','hg-date','hu-date','hd-date','ad-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+  // Set base URL display to current origin
+  const bu = document.getElementById('base-url-display');
+  if (bu && location.hostname !== 'localhost') bu.textContent = location.origin;
+});
+</script>
+{% endblock %}

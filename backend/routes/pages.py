@@ -42,3 +42,8 @@ def analytics():
 @pages_bp.route('/history')
 def history():
     return render_template('history.html')
+
+
+@pages_bp.route('/api-docs')
+def api_docs():
+    return render_template('api_docs.html')
