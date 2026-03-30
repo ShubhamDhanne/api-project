@@ -1,0 +1,47 @@
+# Environment variables — NEVER commit this file
+.env
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Credential and sensitive data files
+AdminUser_*.csv
+details.txt
+login-details.txt
+*.pem
+*.key
+
+# Logs
+*.log
+
+# Lambda packages
+lambda/package/
+lambda/*.zip

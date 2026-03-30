@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Analytics — HealthTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <h4 class="fw-bold mb-0"><i class="fas fa-chart-bar text-primary me-2"></i>Health Analytics</h4>
+  <div class="btn-group" role="group" id="period-toggle">
+    <button type="button" class="btn btn-primary active" data-period="weekly">Weekly</button>
+    <button type="button" class="btn btn-outline-primary" data-period="monthly">Monthly</button>
+  </div>
+</div>
+
+<!-- Date range selectors -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body py-3">
+    <div class="row g-2 align-items-end">
+      <!-- Weekly controls -->
+      <div id="weekly-controls" class="col-auto">
+        <label class="form-label small fw-semibold mb-1">Week Starting</label>
+        <input type="date" id="week-start" class="form-control form-control-sm" />
+      </div>
+      <!-- Monthly controls -->
+      <div id="monthly-controls" class="col-auto d-none">
+        <label class="form-label small fw-semibold mb-1">Month</label>
+        <input type="month" id="month-picker" class="form-control form-control-sm" />
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary btn-sm" id="load-btn">
+          <i class="fas fa-sync-alt me-1"></i>Load
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div id="analytics-loader" class="text-center py-5 d-none">
+  <div class="spinner-border text-primary"></div>
+  <p class="mt-2 text-muted">Loading analytics…</p>
+</div>
+
+<!-- Error -->
+<div id="analytics-error" class="alert alert-warning d-none"></div>
+
+<!-- Analytics content -->
+<div id="analytics-content" class="d-none">
+
+  <!-- Summary cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center py-3">
+        <i class="fas fa-shoe-prints fa-2x text-primary mb-1"></i>
+        <h5 class="fw-bold mb-0" id="an-avg-steps">—</h5>
+        <small class="text-muted">Avg Daily Steps</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center py-3">
+        <i class="fas fa-moon fa-2x mb-1" style="color:#6f42c1"></i>
+        <h5 class="fw-bold mb-0" id="an-avg-sleep">—</h5>
+        <small class="text-muted">Avg Sleep Hours</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center py-3">
+        <i class="fas fa-fire fa-2x text-danger mb-1"></i>
+        <h5 class="fw-bold mb-0" id="an-avg-calories">—</h5>
+        <small class="text-muted">Avg Calories</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center py-3">
+        <i class="fas fa-heart fa-2x text-danger mb-1"></i>
+        <h5 class="fw-bold mb-0" id="an-avg-hr">—</h5>
+        <small class="text-muted">Avg Heart Rate</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <!-- Steps chart -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 fw-semibold">
+          <i class="fas fa-walking text-primary me-2"></i>Daily Steps
+        </div>
+        <div class="card-body"><canvas id="steps-chart" height="200"></canvas></div>
+      </div>
+    </div>
+    <!-- Sleep chart -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 fw-semibold">
+          <i class="fas fa-moon me-2" style="color:#6f42c1"></i>Daily Sleep (hours)
+        </div>
+        <div class="card-body"><canvas id="sleep-chart" height="200"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calories chart -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 fw-semibold">
+      <i class="fas fa-fire text-danger me-2"></i>Daily Calories Burned
+    </div>
+    <div class="card-body"><canvas id="calories-chart" height="120"></canvas></div>
+  </div>
+
+  <!-- Routine Stability section -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 fw-semibold d-flex justify-content-between align-items-center">
+      <span><i class="fas fa-balance-scale text-success me-2"></i>Routine Stability Index</span>
+      <button class="btn btn-outline-success btn-sm" id="refresh-stability">
+        <i class="fas fa-sync-alt me-1"></i>Refresh
+      </button>
+    </div>
+    <div class="card-body" id="stability-section">
+      <div class="text-center py-3" id="stability-loader">
+        <div class="spinner-border text-success"></div>
+        <p class="mt-2 text-muted small">Calculating your routine stability…</p>
+      </div>
+      <div id="stability-data" class="d-none">
+        <div class="row align-items-center g-4">
+          <div class="col-md-4 text-center">
+            <div class="display-3 fw-bold" id="stab-score">—</div>
+            <span class="badge fs-5 px-3 py-2" id="stab-label">—</span>
+            <p class="text-muted small mt-2">out of 100</p>
+          </div>
+          <div class="col-md-4">
+            <h6 class="fw-semibold mb-3">Score Breakdown</h6>
+            <div class="mb-2">
+              <div class="d-flex justify-content-between small mb-1">
+                <span>Sleep</span><span id="stab-sleep-score">—</span>
+              </div>
+              <div class="progress" style="height:8px">
+                <div class="progress-bar bg-indigo" id="stab-sleep-bar" style="width:0%;background:#6f42c1"></div>
+              </div>
+            </div>
+            <div class="mb-2">
+              <div class="d-flex justify-content-between small mb-1">
+                <span>Meals</span><span id="stab-meals-score">—</span>
+              </div>
+              <div class="progress" style="height:8px">
+                <div class="progress-bar bg-warning" id="stab-meals-bar" style="width:0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="d-flex justify-content-between small mb-1">
+                <span>Exercise</span><span id="stab-exercise-score">—</span>
+              </div>
+              <div class="progress" style="height:8px">
+                <div class="progress-bar bg-success" id="stab-exercise-bar" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <h6 class="fw-semibold">Recommendations</h6>
+            <ul class="small ps-3" id="stab-recs"></ul>
+            <div id="stab-alerts" class="mt-2"></div>
+          </div>
+        </div>
+      </div>
+      <div id="stability-error-msg" class="text-muted text-center small d-none py-2"></div>
+    </div>
+  </div>
+
+</div><!-- /analytics-content -->
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/analytics.js"></script>
+{% endblock %}

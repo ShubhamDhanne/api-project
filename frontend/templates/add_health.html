@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% block title %}{% if edit_date %}Edit{% else %}Add{% endif %} Health Data — HealthTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+
+    <div class="d-flex align-items-center mb-4">
+      <a href="/dashboard" class="btn btn-outline-secondary btn-sm me-3">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <div>
+        <h4 class="mb-0 fw-bold" id="page-title">
+          {% if edit_date %}Edit Health Data{% else %}Add Health Data{% endif %}
+        </h4>
+        <p class="text-muted small mb-0" id="page-subtitle">
+          {% if edit_date %}Updating record for {{ edit_date }}{% else %}Log your health metrics for a specific date{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <form id="health-form" novalidate>
+      <!-- Hidden field: edit mode date -->
+      <input type="hidden" id="edit-date" value="{{ edit_date or '' }}" />
+
+      <!-- ── Section 1: Basic Info ────────────────────────────────────── -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <i class="fas fa-calendar-alt me-2"></i>Basic Information
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Date <span class="text-danger">*</span></label>
+              <input type="date" id="date" class="form-control" required
+                     max="{{ '' }}" />
+              <div class="invalid-feedback">Date is required.</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Steps</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-shoe-prints text-muted"></i></span>
+                <input type="number" id="steps" class="form-control" min="0" max="100000" placeholder="e.g. 8500" />
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Weight (kg)</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-weight text-muted"></i></span>
+                <input type="number" id="weight_kg" class="form-control" min="20" max="300" step="0.1" placeholder="e.g. 72.5" />
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Heart Rate (bpm)</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-heart text-muted"></i></span>
+                <input type="number" id="heart_rate" class="form-control" min="30" max="220" placeholder="e.g. 72" />
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Calories Burned</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-fire text-muted"></i></span>
+                <input type="number" id="calories_burned" class="form-control" min="0" placeholder="e.g. 2200" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 2: Sleep ────────────────────────────────────────── -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <i class="fas fa-moon me-2"></i>Sleep
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Sleep Time <small class="text-muted">(24h HH:MM)</small></label>
+              <input type="time" id="sleep_time" class="form-control" placeholder="23:00" />
+              <div class="form-text">When did you go to sleep?</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Wake Time <small class="text-muted">(24h HH:MM)</small></label>
+              <input type="time" id="wake_time" class="form-control" placeholder="07:00" />
+              <div class="form-text">When did you wake up?</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Sleep Duration (hours)</label>
+              <input type="number" id="sleep_hours" class="form-control" min="0" max="24" step="0.5" placeholder="e.g. 7.5" />
+              <div class="form-text">Auto-calculated or enter manually.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 3: Meals ─────────────────────────────────────────── -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <span><i class="fas fa-utensils me-2"></i>Meals</span>
+        </div>
+        <div class="card-body">
+          <div id="meals-container">
+            <!-- Breakfast -->
+            <div class="row g-2 mb-3 p-3 border rounded">
+              <div class="col-12 fw-semibold text-muted small mb-1">
+                <i class="fas fa-sun text-warning me-1"></i>BREAKFAST
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Time (HH:MM)</label>
+                <input type="time" class="form-control form-control-sm meal-time" data-meal="breakfast" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small">Food Description</label>
+                <input type="text" class="form-control form-control-sm meal-food" data-meal="breakfast"
+                       placeholder="e.g. 2 eggs, toast, orange juice" />
+              </div>
+              <div class="col-md-3 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-success btn-sm w-100 lookup-btn" data-meal="breakfast">
+                  <i class="fas fa-search me-1"></i>Lookup Calories
+                </button>
+              </div>
+              <div class="col-12">
+                <div class="nutrition-result alert alert-success py-2 small d-none" id="nutrition-breakfast"></div>
+              </div>
+            </div>
+
+            <!-- Lunch -->
+            <div class="row g-2 mb-3 p-3 border rounded">
+              <div class="col-12 fw-semibold text-muted small mb-1">
+                <i class="fas fa-cloud-sun text-primary me-1"></i>LUNCH
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Time (HH:MM)</label>
+                <input type="time" class="form-control form-control-sm meal-time" data-meal="lunch" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small">Food Description</label>
+                <input type="text" class="form-control form-control-sm meal-food" data-meal="lunch"
+                       placeholder="e.g. chicken salad, water" />
+              </div>
+              <div class="col-md-3 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-success btn-sm w-100 lookup-btn" data-meal="lunch">
+                  <i class="fas fa-search me-1"></i>Lookup Calories
+                </button>
+              </div>
+              <div class="col-12">
+                <div class="nutrition-result alert alert-success py-2 small d-none" id="nutrition-lunch"></div>
+              </div>
+            </div>
+
+            <!-- Dinner -->
+            <div class="row g-2 mb-3 p-3 border rounded">
+              <div class="col-12 fw-semibold text-muted small mb-1">
+                <i class="fas fa-moon text-secondary me-1"></i>DINNER
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Time (HH:MM)</label>
+                <input type="time" class="form-control form-control-sm meal-time" data-meal="dinner" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small">Food Description</label>
+                <input type="text" class="form-control form-control-sm meal-food" data-meal="dinner"
+                       placeholder="e.g. pasta with tomato sauce" />
+              </div>
+              <div class="col-md-3 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-success btn-sm w-100 lookup-btn" data-meal="dinner">
+                  <i class="fas fa-search me-1"></i>Lookup Calories
+                </button>
+              </div>
+              <div class="col-12">
+                <div class="nutrition-result alert alert-success py-2 small d-none" id="nutrition-dinner"></div>
+              </div>
+            </div>
+
+            <!-- Snacks -->
+            <div class="row g-2 mb-2 p-3 border rounded">
+              <div class="col-12 fw-semibold text-muted small mb-1">
+                <i class="fas fa-cookie text-warning me-1"></i>SNACKS
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Time (HH:MM)</label>
+                <input type="time" class="form-control form-control-sm meal-time" data-meal="snack" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small">Food Description</label>
+                <input type="text" class="form-control form-control-sm meal-food" data-meal="snack"
+                       placeholder="e.g. apple, nuts" />
+              </div>
+              <div class="col-md-3 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-success btn-sm w-100 lookup-btn" data-meal="snack">
+                  <i class="fas fa-search me-1"></i>Lookup Calories
+                </button>
+              </div>
+              <div class="col-12">
+                <div class="nutrition-result alert alert-success py-2 small d-none" id="nutrition-snack"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 4: Exercise ─────────────────────────────────────── -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <i class="fas fa-dumbbell me-2"></i>Exercise
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Exercise Type</label>
+              <select id="exercise_type" class="form-select">
+                <option value="">-- None --</option>
+                <option>Running</option>
+                <option>Walking</option>
+                <option>Cycling</option>
+                <option>Swimming</option>
+                <option>Yoga</option>
+                <option>Gym / Weight Training</option>
+                <option>HIIT</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Duration (minutes)</label>
+              <input type="number" id="exercise_duration" class="form-control" min="0" max="600" placeholder="e.g. 45" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Calories Burned (exercise)</label>
+              <input type="number" id="exercise_calories" class="form-control" min="0" placeholder="e.g. 350" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error / Success messages -->
+      <div id="form-error" class="alert alert-danger d-none"></div>
+      <div id="form-success" class="alert alert-success d-none"></div>
+
+      <!-- Submit -->
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary px-4" id="submit-btn">
+          <span id="submit-spinner" class="spinner-border spinner-border-sm me-2 d-none"></span>
+          <span id="submit-text">Save Record</span>
+        </button>
+        <a href="/dashboard" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/health.js"></script>
+{% endblock %}

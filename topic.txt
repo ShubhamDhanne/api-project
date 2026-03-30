@@ -1,0 +1,119 @@
+health analytics ke project mai
+user can view their previous data
+Hi, I want to build a Scalable Cloud-based Health Analytics Application for my MSc assignment.
+ 
+Please carefully follow all the requirements below:
+ 
+🔹 1. Project Overview
+ 
+The project should be a Health Analytics System where users can input their health data (steps, heart rate, sleep), and the system should analyze and provide meaningful insights.
+ 
+---
+ 
+🔹 2. Authentication
+ 
+- A login system is required (OTP or basic authentication).
+- Each user should have their own data.
+ 
+---
+ 
+🔹 3. CRUD Functionality
+ 
+The application must support full CRUD operations:
+ 
+- Create health data
+- Read/view health data
+- Update existing data
+- Delete data
+ 
+---
+ 
+🔹 4. Multiple Date Data Handling
+ 
+- Users must be able to enter data for multiple dates.
+- The system should store and display data date-wise.
+- Users should be able to view:
+  - Daily data
+  - Weekly summary
+  - Monthly summary
+ 
+---
+ 
+🔹 5. Analytics Features
+ 
+The system should provide:
+ 
+- Average steps calculation
+- Calories burned calculation
+- Sleep quality analysis
+- Optional: routine/stability score
+ 
+---
+ 
+🔹 6. API-Based Backend (Important)
+ 
+- The backend must be developed as a REST API (Node.js + Express preferred).
+- It must:
+  - Receive user data
+  - Process it
+  - Return meaningful responses (JSON format)
+ 
+---
+ 
+🔹 7. Integration of Multiple APIs (MANDATORY)
+ 
+As per my assignment:
+ 
+- Minimum 3–5 APIs must be used
+- Include:
+  1. One API developed by me (main Health API)
+  2. One API from a classmate (e.g., Routine Stability API)
+  3. One public API (e.g., calorie/nutrition API)
+- Additional APIs (notifications, visualization) are optional but recommended
+ 
+---
+ 
+🔹 8. Cloud & Scalability (VERY IMPORTANT)
+ 
+The application must be cloud-based and scalable:
+ 
+- Deploy backend on cloud (AWS / Azure / GCP)
+- Use scalable architecture (e.g., queues, microservices, or serverless functions)
+- API should handle multiple users efficiently
+ 
+---
+ 
+🔹 9. Frontend Application
+ 
+- A simple frontend is required (React preferred)
+- It should:
+  - Allow user input
+  - Display analytics (charts/graphs)
+  - Show history of multiple dates
+ 
+---
+ 
+🔹 10. Output Requirements
+ 
+- APIs must return proper JSON responses
+- Clean and well-structured code
+- Proper comments in code
+ 
+---
+ 
+🔹 11. Deliverables
+ 
+- Complete source code (frontend + backend)
+- Readme file with setup instructions
+- Deployed application (live URL)
+- Support for presentation/demo
+ 
+---
+ 
+🔹 12. Additional Notes
+ 
+- The project should be suitable for academic submission
+- Follow clean architecture and best practices
+- Make sure the system is easy to explain during presentation
+ 
+Let me know if you need clarification on any point.

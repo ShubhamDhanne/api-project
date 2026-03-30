@@ -1,0 +1,75 @@
+/* ── HealthTrack custom styles ────────────────────────────────────────────── */
+
+:root {
+  --primary: #0d6efd;
+  --card-radius: 0.75rem;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Cards */
+.card {
+  border-radius: var(--card-radius) !important;
+}
+
+/* Navbar */
+.navbar-brand {
+  letter-spacing: 0.5px;
+}
+
+/* Stat cards on dashboard */
+#stats-row .card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+#stats-row .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Stability score colour coding */
+.badge-excellent  { background-color: #198754; }
+.badge-good       { background-color: #0d6efd; }
+.badge-moderate   { background-color: #fd7e14; }
+.badge-needs      { background-color: #dc3545; }
+.badge-critical   { background-color: #6c0000; }
+
+/* Table hover */
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.04);
+}
+
+/* Progress bars */
+.progress {
+  border-radius: 10px;
+}
+
+/* Toast tweaks */
+.toast {
+  min-width: 260px;
+}
+
+/* Form sections */
+.card-header.bg-primary {
+  border-radius: var(--card-radius) var(--card-radius) 0 0 !important;
+}
+
+/* Spinner overlay */
+#page-loader {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Chart canvas */
+canvas {
+  max-width: 100%;
+}
+
+/* History table responsive overflow */
+.table-responsive {
+  border-radius: 0 0 var(--card-radius) var(--card-radius);
+}
