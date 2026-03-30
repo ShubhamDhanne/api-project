@@ -1,0 +1,31 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    name: SSH Deploy to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:        ${{ secrets.EC2_HOST }}
+          username:    ${{ secrets.EC2_USER }}
+          key:         ${{ secrets.EC2_SSH_KEY }}
+          port:        22
+          timeout:     60s
+          script: |
+            set -e
+            cd /home/ec2-user/health-analytics
+            git pull origin master
+            sudo systemctl restart healthtrack
+            sleep 3
+            sudo systemctl is-active healthtrack
