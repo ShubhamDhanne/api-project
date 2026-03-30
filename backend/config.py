@@ -34,7 +34,7 @@ class Config:
 
     # ── External APIs ─────────────────────────────────────────────────────────
     CALORIE_NINJAS_API_KEY = os.getenv('CALORIE_NINJAS_API_KEY', '')
-    CALORIE_NINJAS_BASE_URL = 'https://api.calorieninjas.com/v1'
+    CALORIE_NINJAS_BASE_URL = 'https://api.api-ninjas.com/v1'
 
     STABILITY_API_BASE = 'https://2u736o5k8k.execute-api.us-east-1.amazonaws.com/prod'
 
