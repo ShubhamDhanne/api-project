@@ -109,12 +109,17 @@ def stability():
 @auth_required
 def bmi():
     """
-    Calculate BMI using the API Ninjas BMI public API.
+    Calculate BMI locally (WHO formula) and optionally fetch calories burned
+    for a given activity from the API Ninjas caloriesburned public API.
 
-    Body (JSON): { "weight_kg": 72.5, "height_cm": 175 }
+    Body (JSON):
+        weight_kg        (required) — user's weight in kg
+        height_cm        (required) — user's height in cm
+        activity         (optional) — exercise activity name, e.g. 'running'
+        duration_minutes (optional) — exercise duration in minutes (default 30)
     Returns:
-        200 with bmi value, category, and healthy_bmi_range.
-        400 on bad input, 503 if API key is missing.
+        200 with bmi, category, healthy_bmi_range, and optional calories_burned list.
+        400 on bad input.
     """
     data = request.get_json(silent=True)
     if not data:
@@ -131,8 +136,19 @@ def bmi():
     if not (50 <= height_cm <= 300):
         return jsonify({'success': False, 'error': 'height_cm must be between 50 and 300.'}), 400
 
+    # Local WHO formula BMI calculation
     result = bmi_service.get_bmi(weight_kg, height_cm)
-    if result is None:
-        return jsonify({'success': False, 'error': 'BMI service unavailable. Ensure CALORIE_NINJAS_API_KEY is configured.'}), 503
 
+    # Optional: enrich with API Ninjas caloriesburned data
+    activity = data.get('activity', '').strip()
+    if activity:
+        try:
+            duration = int(data.get('duration_minutes', 30))
+            duration = max(1, min(duration, 300))
+        except (ValueError, TypeError):
+            duration = 30
+        calories_results = bmi_service.get_calories_burned(activity, weight_kg, duration)
+        result['calories_burned'] = calories_results or []
+
+    logger.info('BMI calculated for user %s: %.1f (%s)', g.user_id, result['bmi'], result['category'])
     return jsonify({'success': True, 'data': result}), 200

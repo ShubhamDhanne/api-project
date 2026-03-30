@@ -213,12 +213,14 @@ function initBmiCalculator() {
   if (!btn) return;
 
   btn.addEventListener('click', async () => {
-    const weight = parseFloat(document.getElementById('bmi-weight')?.value);
-    const height = parseFloat(document.getElementById('bmi-height')?.value);
-    const resultEl = document.getElementById('bmi-result');
-    const errorEl = document.getElementById('bmi-error');
-    const spinner = document.getElementById('bmi-spinner');
-    const icon = document.getElementById('bmi-icon');
+    const weight   = parseFloat(document.getElementById('bmi-weight')?.value);
+    const height   = parseFloat(document.getElementById('bmi-height')?.value);
+    const activity = (document.getElementById('bmi-activity')?.value || '').trim();
+    const duration = parseInt(document.getElementById('bmi-duration')?.value) || 30;
+    const resultEl  = document.getElementById('bmi-result');
+    const errorEl   = document.getElementById('bmi-error');
+    const spinner   = document.getElementById('bmi-spinner');
+    const icon      = document.getElementById('bmi-icon');
 
     errorEl.classList.add('d-none');
     resultEl.classList.add('d-none');
@@ -233,7 +235,13 @@ function initBmiCalculator() {
     spinner.classList.remove('d-none');
     icon.classList.add('d-none');
 
-    const res = await apiCall('/api/analytics/bmi', 'POST', { weight_kg: weight, height_cm: height });
+    const payload = { weight_kg: weight, height_cm: height };
+    if (activity) {
+      payload.activity = activity;
+      payload.duration_minutes = duration;
+    }
+
+    const res = await apiCall('/api/analytics/bmi', 'POST', payload);
 
     btn.disabled = false;
     spinner.classList.add('d-none');
@@ -253,10 +261,24 @@ function initBmiCalculator() {
     // colour-code the BMI value
     const bmiVal = document.getElementById('bmi-value');
     const bmi = parseFloat(d.bmi);
-    if (bmi < 18.5)       bmiVal.className = 'h3 fw-bold mb-0 text-warning';
-    else if (bmi < 25)    bmiVal.className = 'h3 fw-bold mb-0 text-success';
-    else if (bmi < 30)    bmiVal.className = 'h3 fw-bold mb-0 text-warning';
-    else                  bmiVal.className = 'h3 fw-bold mb-0 text-danger';
+    if (bmi < 18.5)      bmiVal.className = 'h3 fw-bold mb-0 text-warning';
+    else if (bmi < 25)   bmiVal.className = 'h3 fw-bold mb-0 text-success';
+    else if (bmi < 30)   bmiVal.className = 'h3 fw-bold mb-0 text-warning';
+    else                 bmiVal.className = 'h3 fw-bold mb-0 text-danger';
+
+    // Show exercise calories table if returned
+    const calSection = document.getElementById('bmi-calories-section');
+    const calList    = document.getElementById('bmi-calories-list');
+    if (Array.isArray(d.calories_burned) && d.calories_burned.length > 0) {
+      calList.innerHTML = d.calories_burned.map(item => `
+        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <span class="text-capitalize">${item.name}</span>
+          <span class="badge bg-danger rounded-pill">${item.total_calories} kcal / ${item.duration_minutes} min</span>
+        </div>`).join('');
+      calSection.classList.remove('d-none');
+    } else {
+      calSection.classList.add('d-none');
+    }
 
     resultEl.classList.remove('d-none');
   });
