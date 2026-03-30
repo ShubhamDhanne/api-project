@@ -42,7 +42,10 @@ def get_nutrition_data(food_query: str) -> dict | None:
         )
         if response.ok:
             data = response.json()
-            return data  # { "items": [ { "name": ..., "calories": ..., ... } ] }
+            # API Ninjas returns a list directly; normalise to {"items": [...]}
+            if isinstance(data, list):
+                return {'items': data}
+            return data
         logger.warning('CalorieNinjas API returned %s for query "%s"', response.status_code, food_query)
         return None
     except requests.RequestException as exc:
@@ -63,11 +66,22 @@ def summarise_nutrition(nutrition_response: dict) -> dict:
         return {}
 
     items = nutrition_response['items']
+
+    def _num(val):
+        """Return float if val is numeric, else 0 (handles premium-only string values)."""
+        try:
+            return float(val)
+        except (TypeError, ValueError):
+            return 0.0
+
     totals = {
-        'total_calories': round(sum(i.get('calories', 0) for i in items), 1),
-        'total_protein_g': round(sum(i.get('protein_g', 0) for i in items), 1),
-        'total_fat_g': round(sum(i.get('fat_total_g', 0) for i in items), 1),
-        'total_carbs_g': round(sum(i.get('carbohydrates_total_g', 0) for i in items), 1),
-        'items': items,
+        'total_calories': round(sum(_num(i.get('calories', 0)) for i in items), 1),
+        'total_protein_g': round(sum(_num(i.get('protein_g', 0)) for i in items), 1),
+        'total_fat_g': round(sum(_num(i.get('fat_total_g', 0)) for i in items), 1),
+        'total_carbs_g': round(sum(_num(i.get('carbohydrates_total_g', 0)) for i in items), 1),
+        'items': [
+            {k: v for k, v in i.items() if not isinstance(v, str) or not 'premium' in v.lower()}
+            for i in items
+        ],
     }
     return totals
