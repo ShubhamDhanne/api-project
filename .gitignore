@@ -39,6 +39,13 @@ login-details.txt
 *.pem
 *.key
 
+# Assignment/brief files
+AGENTS.md
+*.pdf
+*.docx
+pr.txt
+topic.txt
+
 # Logs
 *.log
 
